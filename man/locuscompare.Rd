@@ -4,11 +4,24 @@
 \alias{locuscompare}
 \title{Make a locuscompare plot.}
 \usage{
-locuscompare(in_fn1, in_fn2, marker_col1 = "rsid", pval_col1 = "pval",
-  title1 = "eQTL", marker_col2 = "rsid", pval_col2 = "pval",
-  title2 = "GWAS", snp = NULL, population = "EUR", combine = TRUE,
-  legend = TRUE, legend_position = c("bottomright", "topright",
-  "topleft"), lz_ylab_linebreak = FALSE, genome = c("hg19", "hg38"))
+locuscompare(
+  in_fn1,
+  in_fn2,
+  marker_col1 = "rsid",
+  pval_col1 = "pval",
+  title1 = "eQTL",
+  marker_col2 = "rsid",
+  pval_col2 = "pval",
+  title2 = "GWAS",
+  snp = NULL,
+  population = "EUR",
+  combine = TRUE,
+  legend = TRUE,
+  legend_position = c("bottomright", "topright", "topleft"),
+  lz_ylab_linebreak = FALSE,
+  genome = c("hg19", "hg38"),
+  maintitle = NULL
+)
 }
 \arguments{
 \item{in_fn1}{(string) Path to the input file for study 1.}
@@ -41,6 +54,8 @@ three plots will be returned. Default: TRUE.}
 \item{lz_ylab_linebreak}{(boolean, optional) Whether to break the line of y-axis of the locuszoom plot.}
 
 \item{genome}{(string, optional) Genome assembly, either 'hg19' or 'hg38'. Default: 'hg19'.}
+
+\item{maintitle}{(string, optional) Main title at the top of the full locuscompare plot}
 }
 \description{
 Make a locuscompare plot.
@@ -48,5 +63,5 @@ Make a locuscompare plot.
 \examples{
 in_fn1 = system.file('extdata','gwas.tsv', package = 'locuscomparer')
 in_fn2 = system.file('extdata','eqtl.tsv', package = 'locuscomparer')
-locuscompare(in_fn1 = in_fn1, in_fn2 = in_fn2)
+locuscompare(in_fn1 = in_fn1, in_fn2 = in_fn2, snp="rs12032")
 }

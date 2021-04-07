@@ -356,6 +356,13 @@ make_combined_plot = function (merged, title1, title2, ld, chr, snp = NULL,
     }
 }
 
+make_main_title = function(titletext){
+    title <- ggdraw() +
+        draw_label(titletext, fontface = 'bold', x = 0, hjust = 0)
+    return(title)
+}
+
+
 #' Make a locuscompare plot.
 #' @param in_fn1 (string) Path to the input file for study 1.
 #' @param in_fn2 (string) Path to the input file for study 2.
@@ -373,6 +380,7 @@ make_combined_plot = function (merged, title1, title2, ld, chr, snp = NULL,
 #' @param legend_position (string, optional) Either 'bottomright','topright', or 'topleft'. Default: 'bottomright'.
 #' @param lz_ylab_linebreak (boolean, optional) Whether to break the line of y-axis of the locuszoom plot.
 #' @param genome (string, optional) Genome assembly, either 'hg19' or 'hg38'. Default: 'hg19'.
+#' @param maintitle (string, optional) Main title at the top of the full locuscompare plot
 #' @examples
 #' in_fn1 = system.file('extdata','gwas.tsv', package = 'locuscomparer')
 #' in_fn2 = system.file('extdata','eqtl.tsv', package = 'locuscomparer')
@@ -382,7 +390,7 @@ locuscompare = function(in_fn1, in_fn2, marker_col1 = "rsid", pval_col1 = "pval"
                  title1 = "eQTL",marker_col2 = "rsid", pval_col2 = "pval", title2 = "GWAS",
                  snp = NULL, population = "EUR", combine = TRUE, legend = TRUE,
                  legend_position = c('bottomright','topright','topleft'),
-                 lz_ylab_linebreak = FALSE, genome = c('hg19','hg38')) {
+                 lz_ylab_linebreak = FALSE, genome = c('hg19','hg38'), maintitle = NULL) {
     d1 = read_metal(in_fn1, marker_col1, pval_col1)
     d2 = read_metal(in_fn2, marker_col2, pval_col2)
 
@@ -397,6 +405,11 @@ locuscompare = function(in_fn1, in_fn2, marker_col1 = "rsid", pval_col1 = "pval"
     ld = retrieve_LD(chr, snp, population)
     p = make_combined_plot(merged, title1, title2, ld, chr, snp, combine,
                            legend, legend_position, lz_ylab_linebreak)
+
+    if (!is.null(maintitle)){
+        p = plot_grid(make_main_title(maintitle), p, ncol = 1, rel_heights = c(0.05, 1))
+    }
+    
     return(p)
 }
 
@@ -488,6 +501,7 @@ bottom_legend = function(p){
 #' @param legend_position (string, optional) Either 'bottomright','topright', or 'topleft'. Default: 'bottomright'.
 #' @param lz_ylab_linebreak (boolean, optional) Whether to break the line of y-axis of the locuszoom plot.
 #' @param genome (string, optional) Genome assembly, either 'hg19' or 'hg38'. Default: 'hg19'.
+#' @param maintitle (string, optional) Main title at the top of the full locuscompare plot
 #' @examples
 #' in_fn1 = system.file('extdata','gwas.tsv', package = 'locuscomparer')
 #' in_fn2 = system.file('extdata','eqtl.tsv', package = 'locuscomparer')
@@ -499,7 +513,7 @@ locuscompare3 = function(in_fn1, in_fn2, in_fn3,
                          marker_col3 = "rsid", pval_col3 = "pval", title3 = "eQTL",
                          snp = NULL, population = "EUR", combine = TRUE, legend = TRUE,
                          legend_position = c('bottomright','topright','topleft'),
-                         lz_ylab_linebreak = FALSE, genome = c('hg19','hg38')) {
+                         lz_ylab_linebreak = FALSE, genome = c('hg19','hg38'), maintitle = NULL) {
     d1 = read_metal(in_fn1, marker_col1, pval_col1)
     d2 = read_metal(in_fn2, marker_col2, pval_col2)
     d3 = read_metal(in_fn3, marker_col3, pval_col3)
@@ -519,6 +533,11 @@ locuscompare3 = function(in_fn1, in_fn2, in_fn3,
                             legend, legend_position, lz_ylab_linebreak)
 
     p = bottom_legend(p)
+    
+    if (!is.null(maintitle)){
+        p = plot_grid(make_main_title(maintitle), p, ncol = 1, rel_heights = c(0.05, 1))
+    }
+
     return(p)
 }
 

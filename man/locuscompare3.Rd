@@ -23,7 +23,8 @@ locuscompare3(
   legend = TRUE,
   legend_position = c("bottomright", "topright", "topleft"),
   lz_ylab_linebreak = FALSE,
-  genome = c("hg19", "hg38")
+  genome = c("hg19", "hg38"),
+  maintitle = NULL
 )
 }
 \arguments{
@@ -63,6 +64,8 @@ three plots will be returned. Default: TRUE.}
 \item{lz_ylab_linebreak}{(boolean, optional) Whether to break the line of y-axis of the locuszoom plot.}
 
 \item{genome}{(string, optional) Genome assembly, either 'hg19' or 'hg38'. Default: 'hg19'.}
+
+\item{maintitle}{(string, optional) Main title at the top of the full locuscompare plot}
 }
 \description{
 Make a three way locuscompare plot.
