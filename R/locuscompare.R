@@ -376,7 +376,7 @@ make_combined_plot = function (merged, title1, title2, ld, chr, snp = NULL,
 #' @examples
 #' in_fn1 = system.file('extdata','gwas.tsv', package = 'locuscomparer')
 #' in_fn2 = system.file('extdata','eqtl.tsv', package = 'locuscomparer')
-#' locuscompare(in_fn1 = in_fn1, in_fn2 = in_fn2)
+#' locuscompare(in_fn1 = in_fn1, in_fn2 = in_fn2, snp="rs12032")
 #' @export
 locuscompare = function(in_fn1, in_fn2, marker_col1 = "rsid", pval_col1 = "pval",
                  title1 = "eQTL",marker_col2 = "rsid", pval_col2 = "pval", title2 = "GWAS",
