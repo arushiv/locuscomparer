@@ -209,12 +209,12 @@ add_label = function(merged, snp){
 #' names(size) = merged$rsid
 #' make_scatterplot(merged, title1 = 'GWAS', title2 = 'eQTL', color, shape, size)
 #' @export
-make_scatterplot = function (merged, title1, title2, color, shape, size, legend = TRUE, legend_position = c('bottomright','topright','topleft')) {
+make_scatterplot = function (merged, title1, title2, color, shape, size, ax1 = "logp1", ax2 = "logp2", legend = TRUE, legend_position = c('bottomright','topright','topleft')) {
 
-    p = ggplot(merged, aes(logp1, logp2)) +
+    p = ggplot(merged, aes_string(ax1, ax2)) +
         geom_point(aes(fill = rsid, size = rsid, shape = rsid), alpha = 0.8) +
         geom_point(data = merged[merged$label != "",],
-                   aes(logp1, logp2, fill = rsid, size = rsid, shape = rsid)) +
+                   aes(fill = rsid, size = rsid, shape = rsid)) +
         xlab(bquote(.(title1) ~ -log[10] * '(P)')) +
         ylab(bquote(.(title2) ~ -log[10] * '(P)')) +
         scale_fill_manual(values = color, guide = "none") +
@@ -397,6 +397,128 @@ locuscompare = function(in_fn1, in_fn2, marker_col1 = "rsid", pval_col1 = "pval"
     ld = retrieve_LD(chr, snp, population)
     p = make_combined_plot(merged, title1, title2, ld, chr, snp, combine,
                            legend, legend_position, lz_ylab_linebreak)
+    return(p)
+}
+
+
+
+## composite plot
+make_combined_plot3 = function(merged, title1, title2, title3, ld, chr, snp = NULL,
+                               combine = TRUE, legend = TRUE,
+                               legend_position = c('bottomright','topright','topleft'),
+                               lz_ylab_linebreak=FALSE) {
+    snp = get_lead_snp(merged, snp)
+    ## print(sprintf("INFO - %s", snp))
+  
+    color = assign_color(merged$rsid, snp, ld)
+    
+    shape = ifelse(merged$rsid == snp, 23, 21)
+    names(shape) = merged$rsid
+    
+    size = ifelse(merged$rsid == snp, 3, 2)
+    names(size) = merged$rsid
+    
+    merged = add_label(merged, snp)
+    
+    p12 = make_scatterplot(merged, title1, title2, color,
+                           shape, size, legend = FALSE, ax1 = "logp1", ax2 = "logp2")
+    
+    p13 = make_scatterplot(merged, title1, title3, color,
+                           shape, size, legend = FALSE, ax1 = "logp1", ax2 = "logp3")
+    
+    metal1 = merged[,c('rsid', 'logp1', 'chr', 'pos', 'label')]
+    colnames(metal1)[which(colnames(metal1) == 'logp1')] = 'logp'
+    p2 = make_locuszoom(metal1, title1, chr, color, shape, size, lz_ylab_linebreak)
+    
+    metal2 = merged[,c('rsid', 'logp2', 'chr', 'pos', 'label')]
+    colnames(metal2)[which(colnames(metal2) == 'logp2')] = 'logp'
+    p3 = make_locuszoom(metal2, title2, chr, color, shape, size, lz_ylab_linebreak)
+    
+    metal3 = merged[,c('rsid', 'logp3', 'chr', 'pos', 'label')]
+    colnames(metal3)[which(colnames(metal3) == 'logp3')] = 'logp'
+    p4 = make_locuszoom(metal3, title3, chr, color, shape, size, lz_ylab_linebreak)
+    
+    if (combine) {
+        p2 = p2 + theme(axis.text.x = element_blank(), axis.title.x = element_blank())
+        p3 = p3 + theme(axis.text.x = element_blank(), axis.title.x = element_blank())
+        p5 = cowplot::plot_grid(p2, p3, p4, align = "v", nrow = 3, rel_heights=c(0.8, 0.8, 1))
+        p123 = cowplot::plot_grid(p12, p13, align = "v", nrow = 2, rel_heights=c(1,1))
+        p6 = cowplot::plot_grid(p123, p5)
+        return(p6)
+    }
+    else {
+        return(list(locuscompare = p1, locuszoom1 = p2, locuszoom2 = p3))
+    }
+}
+
+bottom_legend = function(p){
+    legend_box = data.frame(x = seq(.4, .6, .05), y = 0)
+
+    p = ggdraw(p) +
+        geom_rect(data = legend_box,
+                  aes(xmin = x, xmax = x + 0.05, ymin = y, ymax = y + 0.035),
+                  color = "black",
+                  fill = rev(c("blue4", "skyblue", "darkgreen", "orange", "red"))) +
+        draw_label("0.8", x = legend_box$x[1] + 0.05, y = legend_box$y[1], vjust = -2, size = 10) +
+        draw_label("0.6", x = legend_box$x[2] + 0.05, y = legend_box$y[2], vjust = -2, size = 10) +
+        draw_label("0.4", x = legend_box$x[3] + 0.05, y = legend_box$y[3], vjust = -2, size = 10) +
+        draw_label("0.2", x = legend_box$x[4] + 0.05, y = legend_box$y[4], vjust = -2, size = 10) +
+        draw_label(parse(text = "r^2"), x = legend_box$x[1]-0.02, y = legend_box$y[1], vjust = -0.5, size = 10)
+    return(p)
+}
+
+#' Make a three way locuscompare plot.
+#' @param in_fn1 (string) Path to the input file for study 1.
+#' @param in_fn2 (string) Path to the input file for study 2.
+#' @param in_fn2 (string) Path to the input file for study 3.
+#' @param marker_col1 (string, optional) Name of the marker column. Default: 'rsid'.
+#' @param pval_col1 (string, optional) Name of the p-value column. Default: 'pval'.
+#' @param title1 (string) The title for the x-axis.
+#' @param marker_col2 (string, optional) Name of the marker column. Default: 'rsid'.
+#' @param pval_col2 (string, optional) Name of the p-value column. Default: 'pval'.
+#' @param title2 (string) The title for the y-axis.
+#' @param marker_col3 (string, optional) Name of the marker column. Default: 'rsid'.
+#' @param pval_col3 (string, optional) Name of the p-value column. Default: 'pval'.
+#' @param title3 (string) The title for the y-axis.
+#' @param snp (string, optional) SNP rsID. If NULL, the function will select the lead SNP. Default: NULL.
+#' @param population (string, optional) One of the 5 popuations from 1000 Genomes: 'AFR', 'AMR', 'EAS', 'EUR', and 'SAS'. Default: 'EUR'.
+#' @param combine (boolean, optional) Should the three plots be combined into one plot? If FALSE, a list of
+#' three plots will be returned. Default: TRUE.
+#' @param legend (boolean, optional) Should the legend be shown? Default: TRUE.
+#' @param legend_position (string, optional) Either 'bottomright','topright', or 'topleft'. Default: 'bottomright'.
+#' @param lz_ylab_linebreak (boolean, optional) Whether to break the line of y-axis of the locuszoom plot.
+#' @param genome (string, optional) Genome assembly, either 'hg19' or 'hg38'. Default: 'hg19'.
+#' @examples
+#' in_fn1 = system.file('extdata','gwas.tsv', package = 'locuscomparer')
+#' in_fn2 = system.file('extdata','eqtl.tsv', package = 'locuscomparer')
+#' locuscompare(in_fn1 = in_fn1, in_fn2 = in_fn2, snp="rs12032")
+#' @export
+locuscompare3 = function(in_fn1, in_fn2, in_fn3,
+                         marker_col1 = "rsid", pval_col1 = "pval", title1 = "GWAS",
+                         marker_col2 = "rsid", pval_col2 = "pval", title2 = "caQTL",
+                         marker_col3 = "rsid", pval_col3 = "pval", title3 = "eQTL",
+                         snp = NULL, population = "EUR", combine = TRUE, legend = TRUE,
+                         legend_position = c('bottomright','topright','topleft'),
+                         lz_ylab_linebreak = FALSE, genome = c('hg19','hg38')) {
+    d1 = read_metal(in_fn1, marker_col1, pval_col1)
+    d2 = read_metal(in_fn2, marker_col2, pval_col2)
+    d3 = read_metal(in_fn3, marker_col3, pval_col3)
+
+    merged = Reduce(function(x, y) merge(x, y, by = "rsid", suffixes = c("1", "2"), all = FALSE), list(d1, d2, d3))
+    merged = setnames(merged, old = c("pval", "logp"), 
+                      new = c('pval3', 'logp3'))
+    genome = match.arg(genome)
+    merged = get_position(merged, genome)
+
+    chr = unique(merged$chr)
+    if (length(chr) != 1) stop('There must be one and only one chromosome.')
+
+    snp = get_lead_snp(merged, snp)
+    ld = retrieve_LD(chr, snp, population)
+    p = make_combined_plot3(merged, title1, title2, title3, ld, chr, snp, combine,
+                            legend, legend_position, lz_ylab_linebreak)
+
+    p = bottom_legend(p)
     return(p)
 }
 
