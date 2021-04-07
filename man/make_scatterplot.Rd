@@ -8,9 +8,18 @@ an association study. Each point thus represent a SNP. By default, the lead SNP
 is a purple diamond, whereas the other SNPs are colored according to
 their LD with the lead SNP.}
 \usage{
-make_scatterplot(merged, title1, title2, color, shape, size,
-  legend = TRUE, legend_position = c("bottomright", "topright",
-  "topleft"))
+make_scatterplot(
+  merged,
+  title1,
+  title2,
+  color,
+  shape,
+  size,
+  ax1 = "logp1",
+  ax2 = "logp2",
+  legend = TRUE,
+  legend_position = c("bottomright", "topright", "topleft")
+)
 }
 \arguments{
 \item{merged}{(data.frame) An input data.frame which has the following
